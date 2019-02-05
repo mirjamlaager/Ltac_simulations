@@ -1,15 +1,19 @@
-#Does it make sense to round the results of gamma to the nearest integer?
-#convert mean length of stay to meaningful number
 
 run_simulations <- function(n_standard_wards, n_ltac_wards, beds_per_standard_ward, beds_per_ltac_ward, 
-                            n_days, mean_length_of_stay){
+                            n_days, mean_length_of_stay, proportion_colonised_on_admission, within_ward_transmission_rate){
 
-  #parameters of the distribution of patient admissions
+  ###
+  #initialise parameters
+  ###
+  
+  #parameters of the distribution of patient admissions (gamma, rounded to the nearest integer)
   patient_admission_shape <- 1
   patient_admission_rate <- 1
   
-  patient_length_of_stay_mean <- log(mean_length_of_stay)
+  #parameters of the length of stay distribution (log normal, rounded to the nearest integer)
   patient_length_of_stay_variance <- 1
+  patient_length_of_stay_mean <- log(mean_length_of_stay) - (patient_length_of_stay_variance^2)/2
+  
   
   #after a number of days in the standard ward, patients are assigned to the latac waiting list
   #unless they number of days to discharge is small
@@ -47,7 +51,7 @@ run_simulations <- function(n_standard_wards, n_ltac_wards, beds_per_standard_wa
  
   
   ###
-  #update ward log
+  #generate ward log and patient log
   ###
   
   for (day in 1:n_days){
@@ -146,12 +150,61 @@ run_simulations <- function(n_standard_wards, n_ltac_wards, beds_per_standard_wa
     print(wardLog)}
   }
   
+  
+  
+  ###
+  #transmission simulations
+  ###
+  #sample a proportion of patients to be colonised on admission
+  ptLog$colonisation <- ptLog$discharge + 1
+  index_positive_on_admission <- sample(1:n_patients,round(n_patients*proportion_colonised_on_admission))
+  ptLog[index_positive_on_admission,]$colonisation <- ptLog[index_positive_on_admission,]$admission - 1
+  
+
+
+  for (day in 1:n_days){
+    for (ward in 1:n_standard_wards){
+      pt_in_ward <- which(ptLog$standard_ward == ward & ptLog$admission <= day & ptLog$discharge >= day
+                          & (is.na(ptLog$transfer_to_ltac) | ptLog$transfer_to_ltac >= day))
+      
+      susceptible_patients <- pt_in_ward[ptLog[pt_in_ward,]$colonisation >= day]
+      colonised_patients <- pt_in_ward[ptLog[pt_in_ward,]$colonisation < day]
+      N_col <- length(colonised_patients)
+      daily_col_prob <- within_ward_transmission_rate*N_col
+      for (pt in susceptible_patients){
+          if (runif(1) < daily_col_prob){ptLog[pt,]$colonisation <- day}
+      }
+    }
+  }
+  
+  if (n_ltac_wards>0){
+  for (day in 1:n_days){
+    for (ward in (n_standard_wards + 1):(n_standard_wards + n_ltac_wards)){
+      pt_in_ward <- which(ptLog$standard_ward == ward & ptLog$admission <= day & ptLog$discharge >= day
+                          & ptLog$transfer_to_ltac < day)
+      
+      susceptible_patients <- pt_in_ward[ptLog[pt_in_ward,]$colonisation >= day]
+      colonised_patients <- pt_in_ward[ptLog[pt_in_ward,]$colonisation < day]
+      N_col <- length(colonised_patients)
+      daily_col_prob <- within_ward_transmission_rate*N_col
+      for (pt in susceptible_patients){
+        if (runif(1) < daily_col_prob){ptLog[pt,]$colonisation <- day}
+      }
+    }
+  }
+  }
+  
+  
+  
+  ###
+  #store output
+  ###
   write.csv(ptLog,"outfiles_simulations/ptLog.csv",row.names = FALSE)
   write.csv(wardLog,"outfiles_simulations/wardLog.csv",row.names = FALSE)
   
   
-  
-  prevalence_at_discharge <- 0
+  prevalence_on_admission <- sum(ptLog$colonisation == ptLog$admission-1)/n_patients
+  prevalence_on_discharge <- sum(ptLog$colonisation <= ptLog$discharge)/n_patients
 
-  return(prevalence_at_discharge)
+  return(list(prevalence_on_admission,prevalence_on_discharge))
 }
