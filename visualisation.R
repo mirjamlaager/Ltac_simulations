@@ -12,9 +12,6 @@ n_days <- simulation_values$n_days
 mean_length_of_stay <- simulation_values$mean_length_of_stay
 
 
-
-
-
 #plot standard ward occupancy over time
 standard_ward_occupancy <- data.frame(matrix(NA, nrow = n_days, ncol = n_standard_wards+1))
 colnames(standard_ward_occupancy) <- c("time",1:n_standard_wards)
@@ -22,7 +19,8 @@ standard_ward_occupancy[,1] <- 1:n_days
 
 for (day in 1:n_days){
   for (ward in 1:n_standard_wards){
-    standard_ward_occupancy[day,ward+1] <- sum(ptLog$standard_ward == ward & ptLog$admission <= day & ptLog$discharge>=day)
+    pt_in_ward_on_day <- ptLog[ptLog$standard_ward == ward & ptLog$admission <= day & ptLog$discharge>=day,]
+    standard_ward_occupancy[day,ward+1] <- length(which(is.na(pt_in_ward_on_day$transfer_to_ltac) | pt_in_ward_on_day$transfer_to_ltac >= day))
   }
 }
 
@@ -47,7 +45,6 @@ for (ward in 1:n_standard_wards){
 
 #plot ltac ward occupancy over time
 
-n_days <- 50
 ltac_ward_occupancy <- data.frame(matrix(NA, nrow = n_days, ncol = n_ltac_wards+1))
 colnames(ltac_ward_occupancy) <- c("time",1:n_ltac_wards)
 ltac_ward_occupancy[,1] <- 1:n_days
@@ -55,7 +52,7 @@ ltac_ward_occupancy[,1] <- 1:n_days
 for (day in 1:n_days){
   k <- 2
   for (ward in (n_standard_wards + 1):(n_standard_wards + n_ltac_wards)){
-    ltac_ward_occupancy[day,k] <- sum(ptLog$ltac_ward == ward & ptLog$transfer_to_ltac <= day & ptLog$discharge>=day, na.rm=TRUE)
+    ltac_ward_occupancy[day,k] <- sum(ptLog$ltac_ward == ward & ptLog$transfer_to_ltac < day & ptLog$discharge>=day, na.rm=TRUE)
     k <- k + 1
   }
 }
@@ -79,17 +76,10 @@ for (ward in 1:n_ltac_wards){
 
 
 
-
 #plot length of stay distribution
 length_of_stays <- ptLog$discharge - ptLog$admission
 c1 <- ggplot() + aes(length_of_stays)+ geom_histogram(binwidth = 1, color="white", fill ="black") + theme_light()
 c1 
-
-
-
-
-
-
 
 
 

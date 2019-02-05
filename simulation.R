@@ -1,22 +1,19 @@
-
-
-#to do: the n_days is the last day someone can be admitted but not the last day of discharge
-#to do: Does it make sense to round the results of gamma to the nearest integer?
-#to do: what happens to the ltac loop if the number of ltac wards is 0?
-#to do: why is the number of patients per day bigger than the number of beds?
-
+#Does it make sense to round the results of gamma to the nearest integer?
+#convert mean length of stay to meaningful number
 
 run_simulations <- function(n_standard_wards, n_ltac_wards, beds_per_standard_ward, beds_per_ltac_ward, 
                             n_days, mean_length_of_stay){
 
   #parameters of the distribution of patient admissions
-  patient_admission_shape <- 2
+  patient_admission_shape <- 1
   patient_admission_rate <- 1
   
   patient_length_of_stay_mean <- log(mean_length_of_stay)
   patient_length_of_stay_variance <- 1
   
-  ltac_assignment_length_of_stay_cutoff <- 7
+  #after a number of days in the standard ward, patients are assigned to the latac waiting list
+  #unless they number of days to discharge is small
+  ltac_assignment_length_of_stay_cutoff <- 7 
   ltac_assignment_days_to_discharge_cutoff <- 2
   ltac_waiting_list <- vector()
   
@@ -30,10 +27,13 @@ run_simulations <- function(n_standard_wards, n_ltac_wards, beds_per_standard_wa
   #patient will be discharged from the hospital (transfers to ltac are not included in time to event).
 
   n_beds <- n_standard_wards*beds_per_standard_ward + n_ltac_wards*beds_per_ltac_ward
+  
   wardLog <- data.frame(matrix(nrow = n_beds, ncol = 4))
   colnames(wardLog) <- c("ward_number","ward_type","bed_occupancy","bed_time_to_event")
+  
   wardLog$ward_type <- c(rep("s",n_standard_wards*beds_per_standard_ward),rep("ltac",n_ltac_wards*beds_per_ltac_ward))
-  wardLog$ward_number <- c(rep(c(1:n_standard_wards),each=beds_per_standard_ward),rep(c((n_standard_wards+1):(n_standard_wards+n_ltac_wards)),each=beds_per_ltac_ward)) 
+  if (n_ltac_wards > 0){wardLog$ward_number <- c(rep(c(1:n_standard_wards),each=beds_per_standard_ward),rep(c((n_standard_wards+1):(n_standard_wards+n_ltac_wards)),each=beds_per_ltac_ward))
+  } else {wardLog$ward_number <- rep(c(1:n_standard_wards),each=beds_per_standard_ward)}
   wardLog$bed_occupancy <- 0
   wardLog$bed_time_to_event <- round(rgamma(n_beds,patient_admission_shape,patient_admission_rate))
    
@@ -49,12 +49,13 @@ run_simulations <- function(n_standard_wards, n_ltac_wards, beds_per_standard_wa
   ###
   #update ward log
   ###
+  
   for (day in 1:n_days){
   
-  
   #update ltac wards
-    
+  if (n_ltac_wards > 0){
   for (ward in (n_standard_wards+1):(n_standard_wards+n_ltac_wards)){
+    
     #discharge patients from ltac
     index <- which(wardLog$ward_number == ward & wardLog$bed_occupancy != 0 & wardLog$bed_time_to_event == 0)
     if (length(index) > 0){
@@ -67,6 +68,7 @@ run_simulations <- function(n_standard_wards, n_ltac_wards, beds_per_standard_wa
     if (length(index) > 0){
       for (k in index){
         if (length(ltac_waiting_list) > 0){
+          
         #sample a patient from waiting list
         if (length(ltac_waiting_list) == 1){pt <- ltac_waiting_list[1]}
         else {pt <- sample(ltac_waiting_list,1)}
@@ -84,15 +86,14 @@ run_simulations <- function(n_standard_wards, n_ltac_wards, beds_per_standard_wa
         ptLog[pt,]$transfer_to_ltac <- day
         
         #update waiting list
-        
         ltac_waiting_list <- ltac_waiting_list[ltac_waiting_list != pt]
         }
         
         else {wardLog[k,]$bed_time_to_event <- 1}
       }
-      }
+    }
   }
-
+  }
   
   #update standard wards
   ltac_waiting_list <- vector()
@@ -124,17 +125,25 @@ run_simulations <- function(n_standard_wards, n_ltac_wards, beds_per_standard_wa
   }
   
   #assign patients to ltac waiting list
-  ltac_waiting_list <- which(is.na(ptLog$ltac_ward) == TRUE & ptLog$discharge >= day & 
+  ltac_waiting_list <- which(is.na(ptLog$ltac_ward) == TRUE & 
                                (day - ptLog$admission) > ltac_assignment_length_of_stay_cutoff-1 &
                                (ptLog$discharge - day) > ltac_assignment_days_to_discharge_cutoff)
 
   wardLog$bed_time_to_event <- wardLog$bed_time_to_event - 1
   
-
-  if (sum(duplicated(wardLog[wardLog$bed_occupancy > 0,]$bed_occupancy)) > 0){print("Multiple beds allocated to same patient.")}
-  if (length(which(wardLog$bed_time_to_event < 0)) > 0){print("Negative event times.")}
-  
-  
+  #some sanity checks
+  if (sum(is.na(ptLog$ltac_ward) & ptLog$admission<= day & ptLog$discharge >= day) > n_standard_wards*beds_per_standard_ward){print("Multiple patients allocated to the same bed.")
+    print(day)
+    print(ptLog)
+    print(wardLog)}
+  if (sum(duplicated(wardLog[wardLog$bed_occupancy > 0,]$bed_occupancy)) > 0){print("Multiple beds allocated to the same patient.")
+    print(day)
+    print(ptLog)
+    print(wardLog)}
+  if (length(which(wardLog$bed_time_to_event < 0)) > 0){print("Negative event times.")
+    print(day)
+    print(ptLog)
+    print(wardLog)}
   }
   
   write.csv(ptLog,"outfiles_simulations/ptLog.csv",row.names = FALSE)
