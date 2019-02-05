@@ -1,0 +1,12 @@
+name: LTAC_SIMULATIONS
+title: LTAC_SIMULATIONS
+username:
+account: mirjamlaager
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 692699
+bundleId: 1858399
+url: https://mirjamlaager.shinyapps.io/LTAC_SIMULATIONS/
+when: 1549407914.11687
+asMultiple: FALSE
+asStatic: FALSE

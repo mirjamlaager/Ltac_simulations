@@ -180,7 +180,7 @@ run_simulations <- function(n_standard_wards, n_ltac_wards, beds_per_standard_wa
   if (n_ltac_wards>0){
   for (day in 1:n_days){
     for (ward in (n_standard_wards + 1):(n_standard_wards + n_ltac_wards)){
-      pt_in_ward <- which(ptLog$standard_ward == ward & ptLog$admission <= day & ptLog$discharge >= day
+      pt_in_ward <- which(ptLog$ltac_ward == ward & ptLog$admission <= day & ptLog$discharge >= day
                           & ptLog$transfer_to_ltac < day)
       
       susceptible_patients <- pt_in_ward[ptLog[pt_in_ward,]$colonisation >= day]

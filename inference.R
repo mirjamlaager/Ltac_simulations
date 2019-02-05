@@ -20,8 +20,7 @@ write.csv(simulation_values,"outfiles_simulations/simulation_values.csv")
 simulation_output <- run_simulations(n_standard_wards, n_ltac_wards, beds_per_standard_ward, beds_per_ltac_ward, 
                             n_days, mean_length_of_stay,proportion_colonised_on_admission, within_ward_transmission_rate)
 
-admission_prevalence <- simulation_output[1]
-discharge_prevalence <- simulation_output[2]
+
 
 
 
