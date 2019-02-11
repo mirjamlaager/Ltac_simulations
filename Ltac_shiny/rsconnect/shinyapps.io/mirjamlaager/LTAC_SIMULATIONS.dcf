@@ -5,8 +5,8 @@ account: mirjamlaager
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 692699
-bundleId: 1858399
+bundleId: 1869681
 url: https://mirjamlaager.shinyapps.io/LTAC_SIMULATIONS/
-when: 1549407914.11687
+when: 1549912511.01536
 asMultiple: FALSE
 asStatic: FALSE

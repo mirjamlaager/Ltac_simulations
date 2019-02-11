@@ -63,8 +63,9 @@ run_simulations_shiny <- function(n_standard_wards, n_ltac_wards, beds_per_stand
         index <- which(wardLog$ward_number == ward & wardLog$bed_occupancy != 0 & wardLog$bed_time_to_event == 0)
         if (length(index) > 0){
           wardLog[index,]$bed_occupancy <- 0
-          wardLog[index,]$bed_time_to_event <- round(rgamma(length(index),patient_admission_shape,patient_admission_rate))
-        }
+          #wardLog[index,]$bed_time_to_event <- round(rgamma(length(index),patient_admission_shape,patient_admission_rate))
+          wardLog[index,]$bed_time_to_event <- 0
+          }
         
         #admit patients
         index <- which(wardLog$ward_number == ward & wardLog$bed_occupancy == 0 & wardLog$bed_time_to_event == 0)
@@ -193,15 +194,7 @@ run_simulations_shiny <- function(n_standard_wards, n_ltac_wards, beds_per_stand
     }
   }
   
-  n_col_on_admission <- sum(ptLog$colonisation == ptLog$admission-1)
-  n_col_while_in_standard_ward <- sum(ptLog$colonisation >= ptLog$admission & ptLog$colonisation <= ptLog$discharge
-                                      & (is.na(ptLog$transfer_to_ltac) | ptLog$colonisation < ptLog$transfer_to_ltac))
+
   
-  if (n_ltac_wards>0){
-  n_col_while_in_ltac_ward <- sum(ptLog$colonisation >= ptLog$admission & ptLog$colonisation <= ptLog$discharge
-                                  & is.na(ptLog$transfer_to_ltac) ==FALSE & ptLog$colonisation >= ptLog$transfer_to_ltac)
-  } else {n_col_while_in_ltac_ward <- 0}
-  n_col_on_discharge <- sum(ptLog$colonisation <= ptLog$discharge)
-  
-  return(list(n_col_on_admission,n_col_while_in_standard_ward,n_col_while_in_ltac_ward,n_col_on_discharge,n_patients))
+  return(list(ptLog,wardLog))
 }

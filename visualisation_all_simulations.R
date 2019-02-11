@@ -53,9 +53,9 @@ n_patients_short_baseline[k] <- sum(ptLog$discharge - ptLog$admission <= 2)
 n_patients_medium_baseline[k] <- sum(ptLog$discharge - ptLog$admission > 2 & ptLog$discharge - ptLog$admission <= 7)
 n_patients_long_baseline[k] <- sum( ptLog$discharge - ptLog$admission > 7)
 
-col_and_short_stay_baseline <- sum(ptLog$colonisation >= ptLog$admission & ptLog$colonisation <= ptLog$discharge & ptLog$discharge - ptLog$admission <=2)
-col_and_medium_stay_baseline <- sum(ptLog$colonisation >= ptLog$admission & ptLog$colonisation <= ptLog$discharge & ptLog$discharge - ptLog$admission >2 &ptLog$discharge - ptLog$admission <=7 )
-col_and_long_stay_baseline <- sum(ptLog$colonisation >= ptLog$admission & ptLog$colonisation <= ptLog$discharge & ptLog$discharge - ptLog$admission >7)
+col_and_short_stay_baseline[k] <- sum(ptLog$colonisation >= ptLog$admission & ptLog$colonisation <= ptLog$discharge & ptLog$discharge - ptLog$admission <=2)
+col_and_medium_stay_baseline[k] <- sum(ptLog$colonisation >= ptLog$admission & ptLog$colonisation <= ptLog$discharge & ptLog$discharge - ptLog$admission >2 &ptLog$discharge - ptLog$admission <=7 )
+col_and_long_stay_baseline[k] <- sum(ptLog$colonisation >= ptLog$admission & ptLog$colonisation <= ptLog$discharge & ptLog$discharge - ptLog$admission >7)
 }
 
 #evaluate s1 simulations
@@ -85,9 +85,9 @@ for (k in 1:n_runs){
   n_patients_medium_s1[k] <- sum(ptLog$discharge - ptLog$admission > 2 & ptLog$discharge - ptLog$admission <= 7)
   n_patients_long_s1[k] <- sum( ptLog$discharge - ptLog$admission > 7)
   
-  col_and_short_stay_s1 <- sum(ptLog$colonisation >= ptLog$admission & ptLog$colonisation <= ptLog$discharge & ptLog$discharge - ptLog$admission <=2)
-  col_and_medium_stay_s1 <- sum(ptLog$colonisation >= ptLog$admission & ptLog$colonisation <= ptLog$discharge & ptLog$discharge - ptLog$admission >2 &ptLog$discharge - ptLog$admission <=7 )
-  col_and_long_stay_s1 <- sum(ptLog$colonisation >= ptLog$admission & ptLog$colonisation <= ptLog$discharge & ptLog$discharge - ptLog$admission >7)
+  col_and_short_stay_s1[k] <- sum(ptLog$colonisation >= ptLog$admission & ptLog$colonisation <= ptLog$discharge & ptLog$discharge - ptLog$admission <=2)
+  col_and_medium_stay_s1[k] <- sum(ptLog$colonisation >= ptLog$admission & ptLog$colonisation <= ptLog$discharge & ptLog$discharge - ptLog$admission >2 &ptLog$discharge - ptLog$admission <=7 )
+  col_and_long_stay_s1[k] <- sum(ptLog$colonisation >= ptLog$admission & ptLog$colonisation <= ptLog$discharge & ptLog$discharge - ptLog$admission >7)
   
 }
 
