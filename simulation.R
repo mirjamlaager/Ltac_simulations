@@ -1,4 +1,4 @@
-
+#on the day of transfer, the patients count towards the standard ward (it is treated like a discharge)
 run_simulations <- function(n_standard_wards, n_ltac_wards, beds_per_standard_ward, beds_per_ltac_ward, 
                             n_days, mean_length_of_stay, proportion_colonised_on_admission, within_ward_transmission_rate){
 
@@ -64,8 +64,9 @@ run_simulations <- function(n_standard_wards, n_ltac_wards, beds_per_standard_wa
     index <- which(wardLog$ward_number == ward & wardLog$bed_occupancy != 0 & wardLog$bed_time_to_event == 0)
     if (length(index) > 0){
       wardLog[index,]$bed_occupancy <- 0
-      wardLog[index,]$bed_time_to_event <- round(rgamma(length(index),patient_admission_shape,patient_admission_rate))
-    }
+      #wardLog[index,]$bed_time_to_event <- round(rgamma(length(index),patient_admission_shape,patient_admission_rate))
+      wardLog[index,]$bed_time_to_event <- 0
+      }
     
     #admit patients
     index <- which(wardLog$ward_number == ward & wardLog$bed_occupancy == 0 & wardLog$bed_time_to_event == 0)
@@ -197,14 +198,10 @@ run_simulations <- function(n_standard_wards, n_ltac_wards, beds_per_standard_wa
   
   
   ###
-  #store output
+  #return output
   ###
-  write.csv(ptLog,"outfiles_simulations/ptLog.csv",row.names = FALSE)
-  write.csv(wardLog,"outfiles_simulations/wardLog.csv",row.names = FALSE)
+  return(list(ptLog,wardLog))
+  #write.csv(ptLog,paste("outfiles_simulations/ptLog_",run,".csv",sep=""),row.names = FALSE)
+  #write.csv(wardLog,paste("outfiles_simulations/wardLog_",run,".csv",sep=""),row.names = FALSE)
   
-  
-  prevalence_on_admission <- sum(ptLog$colonisation == ptLog$admission-1)/n_patients
-  prevalence_on_discharge <- sum(ptLog$colonisation <= ptLog$discharge)/n_patients
-
-  return(list(prevalence_on_admission,prevalence_on_discharge))
 }

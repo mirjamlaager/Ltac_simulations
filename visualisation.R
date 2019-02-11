@@ -1,8 +1,8 @@
 require("ggplot2")
 require("reshape2")
-ptLog <- read.csv("outfiles_simulations/ptLog.csv")
-wardLog <- read.csv("outfiles_simulations/wardLog.csv")
-simulation_values <- read.csv("outfiles_simulations/simulation_values.csv")
+ptLog <- read.csv("outfiles_simulations/ptLog_s1_1.csv")
+wardLog <- read.csv("outfiles_simulations/wardLog_s1_1.csv")
+simulation_values <- read.csv("outfiles_simulations/simulation_values_s1_1.csv")
   
 n_standard_wards <- simulation_values$n_standard_wards
 n_ltac_wards <- simulation_values$n_ltac_wards
